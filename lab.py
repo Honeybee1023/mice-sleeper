@@ -258,6 +258,33 @@ def set_value_nd(game, coord, value):
 
     return None
 
+def get_neighbors_nd(game, coord, iteration=0):
+    """
+    Return set of coords that are neighbors of coord (including itself)
+    """
+    if len(coord) == 1:
+        return {(coord[0]+1, ), (coord[0],), (coord[0]-1,)}
+    else:
+        neighbors = set()
+        first = coord[0]
+        rest = coord[1:]
+        rest_neighbors = get_neighbors_nd(game, rest, iteration+1)
+        for neighbor_coord in rest_neighbors:
+            if first == 0 and first == game["dimension"][iteration]-1:
+                neighbors.add((first,) + neighbor_coord)
+            elif first == 0:
+                neighbors.add((first,) + neighbor_coord)
+                neighbors.add((first+1,) + neighbor_coord)
+            elif first == game["dimension"][iteration]-1:
+                neighbors.add((first,) + neighbor_coord)
+                neighbors.add((first-1,) + neighbor_coord)
+            else:
+                neighbors.add((first,) + neighbor_coord)
+                neighbors.add((first+1,) + neighbor_coord)
+                neighbors.add((first-1,) + neighbor_coord)
+        return neighbors
+
+
 def place_mice_nd(game, num_mice, disallowed):
     """
     Add mice to the given game, subject to limitations on where they may be
@@ -302,7 +329,11 @@ def place_mice_nd(game, num_mice, disallowed):
     while remaining_mice>0:
         coord = next(random_coordinates(game["dimensions"]))
         if coord not in disallowed:
-            game["board"]
+            set_value_nd(game, coord, 'm')
+            remaining_mice -= 1
+            disallowed.add(coord)
+    
+    #update neighbors
     
 
 
@@ -445,3 +476,9 @@ if __name__ == "__main__":
     # test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
     # set_value_nd(test_game, (0, 1, 0), 'm')
     # print(test_game)
+
+    # test_game = {"dimension": (3, 2, 4)}
+    # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
+    # print(get_neighbors_nd(test_game, (0, 1, 2)))
+
+    

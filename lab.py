@@ -297,7 +297,20 @@ def get_neighbors_nd(game, coord, iteration=0):
                 neighbors.add((first-1,) + neighbor_coord)
         return neighbors
 
-
+def all_coords(dimension):
+    """
+    Return a set of all the coordinates in an n-dimensional game board
+    """
+    if len(dimension)==1:
+        return set((x,) for x in range(dimension[0]))
+    else:
+        output = set()
+        rest_coords = all_coords(dimension[1:])
+        for first in range(dimension[0]):
+            for coord in rest_coords:
+                output.add((first,)+coord)
+        return output
+    
 def place_mice_nd(game, num_mice, disallowed):
     """
     Add mice to the given game, subject to limitations on where they may be
@@ -347,6 +360,7 @@ def place_mice_nd(game, num_mice, disallowed):
             disallowed.add(coord)
     
     #update neighbors
+    
     
 
 
@@ -500,4 +514,6 @@ if __name__ == "__main__":
     # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
     # print(get_neighbors_nd(test_game, (0, 1, 2)))
 
+    #test for all_coords
+    #print(all_coords((2,1,3)))
     

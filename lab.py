@@ -258,6 +258,19 @@ def set_value_nd(game, coord, value):
 
     return None
 
+def get_value_nd(game, coord):
+    """
+    return value of board at that coord
+    """
+    def get_val(curr_list, coord):
+        if len(coord) == 1:
+            return curr_list[coord[0]]
+        else:
+            return get_val(curr_list[coord[0]], coord[1:])
+
+    return get_val(game["board"][coord[0]], coord[1:])
+
+
 def get_neighbors_nd(game, coord, iteration=0):
     """
     Return set of coords that are neighbors of coord (including itself)
@@ -473,10 +486,16 @@ if __name__ == "__main__":
     #    verbose=False
     # )
 
+    # test for set_value_nd:
     # test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
     # set_value_nd(test_game, (0, 1, 0), 'm')
     # print(test_game)
 
+    # test for get_value_nd:
+    # test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
+    # print(get_value_nd(test_game, (0, 1, 0)))
+
+    # test for get_neighbors_nd:
     # test_game = {"dimension": (3, 2, 4)}
     # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
     # print(get_neighbors_nd(test_game, (0, 1, 2)))

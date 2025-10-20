@@ -239,6 +239,10 @@ def new_game_nd(dimensions, num_mice):
             game["board"][ind] = one_less_dimension["board"]
             game["visible"][ind] = one_less_dimension["visible"]
 
+    game["coord_to_val"]={}
+    for coord in all_coords(game["dimensions"]):
+        game["coord_to_val"][coord] = get_value_nd(game, coord)
+
     return game
 
 def set_value_nd(game, coord, value):
@@ -263,6 +267,8 @@ def get_value_nd(game, coord):
     return value of board at that coord
     """
     def get_val(curr_list, coord):
+        if len(coord) <= 0:
+            return []
         if len(coord) == 1:
             return curr_list[coord[0]]
         else:
@@ -352,15 +358,23 @@ def place_mice_nd(game, num_mice, disallowed):
     """
     #place the mice first
     remaining_mice = num_mice
+    mice_spots = set()
     while remaining_mice>0:
         coord = next(random_coordinates(game["dimensions"]))
         if coord not in disallowed:
             set_value_nd(game, coord, 'm')
+            mice_spots.add(coord)
             remaining_mice -= 1
             disallowed.add(coord)
     
     #update neighbors
-    
+    empty_spots = all_coords(game["dimension"]) - mice_spots
+    for spot in empty_spots:
+        neighbors = get_neighbors_nd(game, spot)
+        for neighbor in neighbors:
+            if get_value_nd(game, neighbor)=='m':
+                set_value_nd
+
     
 
 
@@ -500,20 +514,24 @@ if __name__ == "__main__":
     #    verbose=False
     # )
 
-    # test for set_value_nd:
-    # test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
-    # set_value_nd(test_game, (0, 1, 0), 'm')
-    # print(test_game)
+    # test for set_value_nd: 
+    # expected: {'board': [[[2, 2], ['m', 2]], [['m', 'm'], [2, 2]]]}
+    test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
+    set_value_nd(test_game, (0, 1, 0), 'm')
+    print(test_game)
 
-    # test for get_value_nd:
-    # test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
-    # print(get_value_nd(test_game, (0, 1, 0)))
+    # test for get_value_nd: 
+    # expected: 1
+    test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
+    print(get_value_nd(test_game, (0, 1, 0)))
 
     # test for get_neighbors_nd:
-    # test_game = {"dimension": (3, 2, 4)}
-    # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
-    # print(get_neighbors_nd(test_game, (0, 1, 2)))
+    # should have 12
+    test_game = {"dimension": (3, 2, 4)}
+    print(len(get_neighbors_nd(test_game, (0, 1, 2))))
+    print(get_neighbors_nd(test_game, (0, 1, 2)))
 
     #test for all_coords
-    #print(all_coords((2,1,3)))
+    # expected:{(1, 0, 1), (0, 0, 0), (1, 0, 0), (0, 0, 2), (1, 0, 2), (0, 0, 1)}
+    print(all_coords((2,1,3)))
     

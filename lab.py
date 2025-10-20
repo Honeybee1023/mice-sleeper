@@ -241,7 +241,7 @@ def new_game_nd(dimensions, num_mice):
 
     game["coord_to_val"]={}
     for coord in all_coords(game["dimensions"]):
-        game["coord_to_val"][coord] = get_value_nd(game, coord)
+        game["coord_to_val"][coord] = get_value_nd(game, coord, initial=True)
 
     return game
 
@@ -260,21 +260,26 @@ def set_value_nd(game, coord, value):
 
     game["board"][coord[0]] = value_to_set(game["board"][coord[0]], coord[1:], value)
 
+    game["coord_to_val"][coord] = value
+
     return None
 
-def get_value_nd(game, coord):
+def get_value_nd(game, coord, initial = False):
     """
     return value of board at that coord
     """
-    def get_val(curr_list, coord):
-        if len(coord) <= 0:
-            return []
-        if len(coord) == 1:
-            return curr_list[coord[0]]
-        else:
-            return get_val(curr_list[coord[0]], coord[1:])
+    if initial:
+        def get_val(curr_list, coord):
+            if len(coord) <= 0:
+                return []
+            if len(coord) == 1:
+                return curr_list[coord[0]]
+            else:
+                return get_val(curr_list[coord[0]], coord[1:])
 
-    return get_val(game["board"][coord[0]], coord[1:])
+        return get_val(game["board"][coord[0]], coord[1:])
+
+    else: return game["coord_to_val"][coord]
 
 
 def get_neighbors_nd(game, coord, iteration=0):

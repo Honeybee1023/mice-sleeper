@@ -103,7 +103,8 @@ def place_mice_2d(game, num_mice, disallowed):
         [False, False]
         [False, False]
     """
-    raise NotImplementedError
+    place_mice_nd(game, num_mice, disallowed)
+    return None
 
 
 def reveal_2d(game, row, col):
@@ -251,6 +252,8 @@ def set_value_nd(game, coord, value):
     #>>> set_value_nd({"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}, (0, 1, 0), 'm')
     """
     def value_to_set(curr_list, coord, value):
+        if len(coord) < 1:
+            return curr_list
         if len(coord) == 1:
             curr_list[coord[0]] = value
             return curr_list
@@ -287,19 +290,26 @@ def get_neighbors_nd(game, coord, iteration=0):
     Return set of coords that are neighbors of coord (including itself)
     """
     if len(coord) == 1:
-        return {(coord[0]+1, ), (coord[0],), (coord[0]-1,)}
+        val = coord[0]
+        if val == 0 and val == game["dimensions"][iteration]-1:
+            return {(val,)}
+        elif val == 0:
+            return {(coord[0]+1, ), (coord[0],)}
+        elif val == game["dimensions"][iteration]-1:
+            return {(coord[0],), (coord[0]-1,)}
+        else: return {(coord[0]+1, ), (coord[0],), (coord[0]-1,)}
     else:
         neighbors = set()
         first = coord[0]
         rest = coord[1:]
         rest_neighbors = get_neighbors_nd(game, rest, iteration+1)
         for neighbor_coord in rest_neighbors:
-            if first == 0 and first == game["dimension"][iteration]-1:
+            if first == 0 and first == game["dimensions"][iteration]-1:
                 neighbors.add((first,) + neighbor_coord)
             elif first == 0:
                 neighbors.add((first,) + neighbor_coord)
                 neighbors.add((first+1,) + neighbor_coord)
-            elif first == game["dimension"][iteration]-1:
+            elif first == game["dimensions"][iteration]-1:
                 neighbors.add((first,) + neighbor_coord)
                 neighbors.add((first-1,) + neighbor_coord)
             else:
@@ -336,9 +346,9 @@ def place_mice_nd(game, num_mice, disallowed):
 
     This function works by mutating the given game, and it always returns None
 
-    #>>> g = new_game_nd((2, 2, 2), 2)
-    #>>> place_mice_nd(g, 2, set())
-    #>>> dump(g)
+    >>> g = new_game_nd((2, 2, 2), 2)
+    >>> place_mice_nd(g, 2, set())
+    >>> dump(g)
     board:
         [[2, 2], [2, 2]]
         [['m', 'm'], [2, 2]]
@@ -349,9 +359,9 @@ def place_mice_nd(game, num_mice, disallowed):
         [[False, False], [False, False]]
 
 
-    #>>> g = new_game_nd((2, 2, 2), 2)
-    #>>> place_mice_nd(g, 2, {(1, 0, 0), (0, 1, 1)})
-    #>>> dump(g)
+    >>> g = new_game_nd((2, 2, 2), 2)
+    >>> place_mice_nd(g, 2, {(1, 0, 0), (0, 1, 1)})
+    >>> dump(g)
     board:
         [[2, 2], [2, 2]]
         [[2, 'm'], ['m', 2]]
@@ -366,21 +376,34 @@ def place_mice_nd(game, num_mice, disallowed):
     mice_spots = set()
     while remaining_mice>0:
         coord = next(random_coordinates(game["dimensions"]))
+        print(game["dimensions"])
+        for _ in range(3):
+            print("hi")
+            print(next(random_coordinates(game["dimensions"])))
         if coord not in disallowed:
             set_value_nd(game, coord, 'm')
             mice_spots.add(coord)
             remaining_mice -= 1
-            disallowed.add(coord)
-    
+            #disallowed.add(coord)
+
+    print("done mice")
+    # print(game["board"])
+
     #update neighbors
-    empty_spots = all_coords(game["dimension"]) - mice_spots
+    empty_spots = all_coords(game["dimensions"]) - mice_spots
+    # print(mice_spots)
+    # print(empty_spots)
     for spot in empty_spots:
-        neighbors = get_neighbors_nd(game, spot)
+        curr_mouse_count = 0
+        neighbors = get_neighbors_nd(game, spot) - {spot}
         for neighbor in neighbors:
             if get_value_nd(game, neighbor)=='m':
-                set_value_nd
+                curr_mouse_count+=1
+        set_value_nd(game, spot, curr_mouse_count)
 
-    
+    #print(game["board"])
+
+    return None
 
 
 def reveal_nd(game, coordinates):
@@ -521,22 +544,31 @@ if __name__ == "__main__":
 
     # test for set_value_nd: 
     # expected: {'board': [[[2, 2], ['m', 2]], [['m', 'm'], [2, 2]]]}
-    test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
-    set_value_nd(test_game, (0, 1, 0), 'm')
-    print(test_game)
+    # test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
+    # set_value_nd(test_game, (0, 1, 0), 'm')
+    # print(test_game)
 
     # test for get_value_nd: 
     # expected: 1
-    test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
-    print(get_value_nd(test_game, (0, 1, 0)))
+    # test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
+    # print(get_value_nd(test_game, (0, 1, 0)))
 
     # test for get_neighbors_nd:
     # should have 12
-    test_game = {"dimension": (3, 2, 4)}
-    print(len(get_neighbors_nd(test_game, (0, 1, 2))))
-    print(get_neighbors_nd(test_game, (0, 1, 2)))
+    # test_game = {"dimension": (3, 2, 4)}
+    # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
+    # print(get_neighbors_nd(test_game, (0, 1, 2)))
 
     #test for all_coords
     # expected:{(1, 0, 1), (0, 0, 0), (1, 0, 0), (0, 0, 2), (1, 0, 2), (0, 0, 1)}
-    print(all_coords((2,1,3)))
+    # print(all_coords((2,1,3)))
+
+    for _ in range(3):
+        print("main")
+        print(next(random_coordinates((3,3))))
+
+    #test for place_mice
+    g = new_game_nd((2,2), 2)
+    place_mice_nd(g, 2, set())
+    dump(g)
     

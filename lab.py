@@ -372,21 +372,18 @@ def place_mice_nd(game, num_mice, disallowed):
         [[False, False], [False, False]]
     """
     #place the mice first
+    generator = random_coordinates(game["dimensions"])
+        #You must give generator a name, otherwise you call function anew each time
     remaining_mice = num_mice
     mice_spots = set()
     while remaining_mice>0:
-        coord = next(random_coordinates(game["dimensions"]))
-        print(game["dimensions"])
-        for _ in range(3):
-            print("hi")
-            print(next(random_coordinates(game["dimensions"])))
+        coord = next(generator)
         if coord not in disallowed:
             set_value_nd(game, coord, 'm')
             mice_spots.add(coord)
             remaining_mice -= 1
             #disallowed.add(coord)
-
-    print("done mice")
+            
     # print(game["board"])
 
     #update neighbors
@@ -562,10 +559,6 @@ if __name__ == "__main__":
     #test for all_coords
     # expected:{(1, 0, 1), (0, 0, 0), (1, 0, 0), (0, 0, 2), (1, 0, 2), (0, 0, 1)}
     # print(all_coords((2,1,3)))
-
-    for _ in range(3):
-        print("main")
-        print(next(random_coordinates((3,3))))
 
     #test for place_mice
     g = new_game_nd((2,2), 2)

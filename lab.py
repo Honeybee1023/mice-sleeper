@@ -229,16 +229,33 @@ def new_game_nd(dimensions, num_mice):
     game = {"dimensions": dimensions, "state": "ongoing"}
 
     if len(dimensions)==1:
-        game["board"] = [0]*dimensions[0]
-        game["visible"] = [False]*dimensions[0]
+        game["board"] = [0]
+        game["visible"] = [False]
+        for _ in range(dimensions[0]-1):
+            game["board"].append(0)
+            game["visible"].append(False)
 
     else:
-        game["board"] = [[]] * dimensions[0]
-        game["visible"] = [[]] * dimensions[0]
+        game["board"] = [[]]
+        game["visible"] = [[]]
+        for _ in range(dimensions[0]-1):
+            game["board"].append([])
+            game["visible"].append([])
+
+        # game["board"] = [[]] * dimensions[0]
+        # game["visible"] = [[]] * dimensions[0]
         one_less_dimension = new_game_nd(dimensions[1:], num_mice)
+
+
+        def deep_copy(input):
+            if isinstance(input, list):
+                return [deep_copy(x) for x in input]
+            else: return input
+
         for ind in range(dimensions[0]):
-            game["board"][ind] = one_less_dimension["board"]
-            game["visible"][ind] = one_less_dimension["visible"]
+            # use a recursive copy so each top-level slice has independent inner lists
+            game["board"][ind] = deep_copy(one_less_dimension["board"])
+            game["visible"][ind] = deep_copy(one_less_dimension["visible"])
 
     game["coord_to_val"]={}
     for coord in all_coords(game["dimensions"]):
@@ -374,22 +391,29 @@ def place_mice_nd(game, num_mice, disallowed):
     #place the mice first
     generator = random_coordinates(game["dimensions"])
         #You must give generator a name, otherwise you call function anew each time
+    # for _ in range(3):
+    #     print(next(generator))
     remaining_mice = num_mice
     mice_spots = set()
     while remaining_mice>0:
         coord = next(generator)
+        print("in mice loop")
+        print (mice_spots)
+        print(coord)
+        print (remaining_mice)
         if coord not in disallowed:
             set_value_nd(game, coord, 'm')
             mice_spots.add(coord)
             remaining_mice -= 1
-            #disallowed.add(coord)
-            
-    # print(game["board"])
+            disallowed.add(coord)
+
+    print("done mice")
+    print(game["board"])
 
     #update neighbors
     empty_spots = all_coords(game["dimensions"]) - mice_spots
     # print(mice_spots)
-    # print(empty_spots)
+    #print(empty_spots)
     for spot in empty_spots:
         curr_mouse_count = 0
         neighbors = get_neighbors_nd(game, spot) - {spot}
@@ -545,6 +569,16 @@ if __name__ == "__main__":
     # set_value_nd(test_game, (0, 1, 0), 'm')
     # print(test_game)
 
+    # g = new_game_nd((2,2), 2)
+    # g["board"][0][0] = "hi"
+    # dump(g)
+
+    # g = new_game_nd((2,2,2), 2)
+    # g["board"][0][0][0] = "hi"
+    # dump(g)
+    # set_value_nd(g, (0, 0, 0), 'm')
+    # dump(g)
+
     # test for get_value_nd: 
     # expected: 1
     # test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
@@ -561,7 +595,9 @@ if __name__ == "__main__":
     # print(all_coords((2,1,3)))
 
     #test for place_mice
-    g = new_game_nd((2,2), 2)
+    g = new_game_nd((2,2,2), 2)
     place_mice_nd(g, 2, set())
     dump(g)
+
+
     

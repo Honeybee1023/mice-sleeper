@@ -194,7 +194,7 @@ def render_2d(game, all_visible=False):
     >>> render_2d(game, False)
     [[' ', '1', '_', 'm'], [' ', '1', '_', '_']]
     """
-    raise NotImplementedError
+    return render_nd(game, all_visible)
 
 
 # N-D IMPLEMENTATION

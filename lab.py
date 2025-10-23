@@ -161,7 +161,7 @@ def reveal_2d(game, row, col):
         [True, False, True, True]
         [False, False, True, True]
     """
-    raise NotImplementedError
+    return reveal_nd(game, (row, col))
 
 
 def render_2d(game, all_visible=False):
@@ -261,16 +261,19 @@ def new_game_nd(dimensions, num_mice):
     for coord in all_coords(game["dimensions"]):
         game["coord_to_val"][coord] = get_value_nd(game, coord, initial=True)
 
+    game["revealed_coords"] = set()
+
+    game["num_mice"] = num_mice
+
     return game
 
-def set_value_nd(game, coord, value):
+def set_value_nd(game, coord, value, type = "board"):
     """
     Mutates game board
-    #>>> set_value_nd({"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}, (0, 1, 0), 'm')
     """
     def value_to_set(curr_list, coord, value):
         if len(coord) < 1:
-            return curr_list
+            return value
         if len(coord) == 1:
             curr_list[coord[0]] = value
             return curr_list
@@ -278,9 +281,9 @@ def set_value_nd(game, coord, value):
             curr_list[coord[0]] = value_to_set(curr_list[coord[0]], coord[1:], value)
             return curr_list
 
-    game["board"][coord[0]] = value_to_set(game["board"][coord[0]], coord[1:], value)
+    game[type][coord[0]] = value_to_set(game[type][coord[0]], coord[1:], value)
 
-    game["coord_to_val"][coord] = value
+    if type == "board": game["coord_to_val"][coord] = value
 
     return None
 
@@ -397,23 +400,14 @@ def place_mice_nd(game, num_mice, disallowed):
     mice_spots = set()
     while remaining_mice>0:
         coord = next(generator)
-        print("in mice loop")
-        print (mice_spots)
-        print(coord)
-        print (remaining_mice)
         if coord not in disallowed:
             set_value_nd(game, coord, 'm')
             mice_spots.add(coord)
             remaining_mice -= 1
             disallowed.add(coord)
 
-    print("done mice")
-    print(game["board"])
-
     #update neighbors
     empty_spots = all_coords(game["dimensions"]) - mice_spots
-    # print(mice_spots)
-    #print(empty_spots)
     for spot in empty_spots:
         curr_mouse_count = 0
         neighbors = get_neighbors_nd(game, spot) - {spot}
@@ -422,9 +416,21 @@ def place_mice_nd(game, num_mice, disallowed):
                 curr_mouse_count+=1
         set_value_nd(game, spot, curr_mouse_count)
 
-    #print(game["board"])
-
     return None
+
+def game_won_nd(game):
+    """
+    Return True if game is won, False otherwise
+    """
+    if game["state"] == "lost":
+        return False
+    elif game["state"] == "won":
+        return True
+    else: #still labelled ongoing
+        total_coords = 1
+        for val in game["dimensions"]:
+            total_coords *= val
+        return total_coords == len(game["revealed_coords"]) + game["num_mice"]
 
 
 def reveal_nd(game, coordinates):
@@ -489,7 +495,44 @@ def reveal_nd(game, coordinates):
         [[True, True], [False, False], [True, True], [True, True]]
         [[False, False], [False, False], [True, True], [True, True]]
     """
-    raise NotImplementedError
+    first_reveal = (len(game["revealed_coords"])==0)
+    #check incoming game state
+    #if not ongoing, return 0
+    if game["state"] != "ongoing":
+        return 0
+    #if already revealed, return 0
+    if coordinates in game["revealed_coords"]:
+        return 0
+    #else
+    #check if first reveal
+    #if first reveal, then 
+    if first_reveal:
+        # first call place mice with disallowed coords being neighbors of coord plus coord itself
+        disallowed = get_neighbors_nd(game, coordinates)
+        place_mice_nd(game, game["num_mice"] , disallowed)
+    #now do reveal
+    #add this coord to revealed
+    game["revealed_coords"].add(coordinates)
+    num_revealed = 1
+    #var = value at this coord
+    val = get_value_nd(game, coordinates)
+    #reveal this coord in visible
+    set_value_nd(game, coordinates, True, type="visible")
+    #if mouse, we lost
+    if val == 'm':
+        game["state"] = "lost"
+    #if number, just reveal this square
+    #if 0, call reveal on all neighbors that are not revealed yet
+    elif val == 0:
+        neighbors = get_neighbors_nd(game, coordinates) - {coordinates} - game["revealed_coords"]
+        for neighbor in neighbors:
+            num_revealed += reveal_nd(game, neighbor)
+    #check if won using helper function and update
+    if game["state"] != "lost":
+        if game_won_nd(game):
+            game["state"] = "won"
+    
+    return num_revealed
 
 
 def render_nd(game, all_visible=False):
@@ -595,9 +638,28 @@ if __name__ == "__main__":
     # print(all_coords((2,1,3)))
 
     #test for place_mice
-    g = new_game_nd((2,2,2), 2)
-    place_mice_nd(g, 2, set())
-    dump(g)
+    # g = new_game_nd((2,2,2), 2)
+    # place_mice_nd(g, 2, set())
+    # dump(g)
+
+    #test for reveal_nd
+    # g = new_game_nd((2, 4, 2), 3)
+    # print(reveal_nd(g, (0, 3, 0)))
+    # dump(g)
+    # print(reveal_nd(g, (0, 0, 1)))
+    # dump(g)
+    # print(reveal_nd(g, (0, 0, 0)))
+    # dump(g)
+
+    # game = new_game_2d(2, 4, 3)
+    # print(reveal_2d(game, 0, 3))
+    # dump(game)
+    # print(reveal_2d(game, 0, 0))
+    # dump(game)
+
+    game = new_game_nd((4,), 1)
+    print(reveal_nd(game, (0,)))
+    dump(game)
 
 
     

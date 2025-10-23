@@ -265,6 +265,8 @@ def new_game_nd(dimensions, num_mice):
 
     game["num_mice"] = num_mice
 
+    game["bed_coords"] = set()
+
     return game
 
 def set_value_nd(game, coord, value, type = "board"):
@@ -504,6 +506,8 @@ def reveal_nd(game, coordinates):
     if coordinates in game["revealed_coords"]:
         return 0
     #else
+    if coordinates in game["bed_coords"]:
+        return 0
     #check if first reveal
     #if first reveal, then 
     if first_reveal:
@@ -578,9 +582,12 @@ def render_nd(game, all_visible=False):
     
     if all_visible:
         return show_board
-    else:
+    else: #all_visible=False
         for coord in all_coords(game["dimensions"]) - game["revealed_coords"]:
-            set_value_nd({"show_board": show_board}, coord, '_', type = "show_board")
+            if coord in game["bed_coords"]:
+                set_value_nd({"show_board": show_board}, coord, 'B', type = "show_board")
+            else:
+                set_value_nd({"show_board": show_board}, coord, '_', type = "show_board")
         return show_board
 
 
@@ -606,6 +613,40 @@ def random_coordinates(dimensions):
     while True:
         yield tuple(int(dim * val) for val, dim in zip(prng_gen, dimensions))
 
+#ADD FUNCTIONS FOR PLACING BEDS
+
+def toggle_bed_2d(game, row, col):
+    """
+    Toggle a bed at the given (row, col) location in a 2D game.
+
+    If there is no bed at the specified location, add one. If there is already
+    a bed there, remove it.
+    """
+    return toggle_bed_nd(game, (row, col))
+
+def toggle_bed_nd(game, coordinates):
+    """
+    Toggle a bed at the given coordinates in an n-dimensional game.
+
+    If there is no bed at the specified location, add one. If there is already
+    a bed there, remove it.
+    """
+    #confirm we have valid unrevealed coord as input + if game ongoing
+    #if not, return None
+    if game["state"] != "ongoing":
+        return None
+    if coordinates in game["revealed_coords"]:
+        return None
+    if coordinates not in all_coords(game["dimensions"]):
+        return None
+    #if no bed, add bed, return True
+    if coordinates not in game["bed_coords"]:
+        game["bed_coords"].add(coordinates)
+        return True
+    #if bed, remove bed, return False
+    else:
+        game["bed_coords"].remove(coordinates)
+        return False
 
 if __name__ == "__main__":
     # Test with doctests. Helpful to debug individual lab.py functions.

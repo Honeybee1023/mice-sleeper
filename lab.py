@@ -562,7 +562,27 @@ def render_nd(game, all_visible=False):
     [[['m', '3'], ['m', '3'], ['1', '1'], [' ', ' ']],
      [['m', '3'], ['3', '3'], ['1', '1'], [' ', ' ']]]
     """
-    raise NotImplementedError
+    def deep_copy(input):
+            if isinstance(input, list):
+                return [deep_copy(x) for x in input]
+            else: return input
+
+    show_board = deep_copy(game["board"])
+    
+    for coord in all_coords(game["dimensions"]):
+        val = get_value_nd(game, coord)
+        if val == 0:
+            set_value_nd({"show_board": show_board}, coord, ' ', type = "show_board")
+        elif val != 'm':
+            set_value_nd({"show_board": show_board}, coord, str(val), type = "show_board")
+    
+    if all_visible:
+        return show_board
+    else:
+        for coord in all_coords(game["dimensions"]) - game["revealed_coords"]:
+            set_value_nd({"show_board": show_board}, coord, '_', type = "show_board")
+        return show_board
+
 
 
 def random_coordinates(dimensions):
@@ -657,9 +677,15 @@ if __name__ == "__main__":
     # print(reveal_2d(game, 0, 0))
     # dump(game)
 
-    game = new_game_nd((4,), 1)
-    print(reveal_nd(game, (0,)))
-    dump(game)
+    # game = new_game_nd((4,), 1)
+    # print(reveal_nd(game, (0,)))
+    # dump(game)
+
+    # test for render_nd
+    # g = new_game_nd((2, 4, 2), 3)
+    # reveal_nd(g, (0, 3, 0))
+    # print(render_nd(g, False))
+    # print(render_nd(g, True))
 
 
     

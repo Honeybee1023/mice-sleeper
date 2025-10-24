@@ -200,7 +200,6 @@ def render_2d(game, all_visible=False):
 # N-D IMPLEMENTATION
 
 
-
 def new_game_nd(dimensions, num_mice):
     """
     Start a new game.
@@ -228,17 +227,17 @@ def new_game_nd(dimensions, num_mice):
     """
     game = {"dimensions": dimensions, "state": "ongoing"}
 
-    if len(dimensions)==1:
+    if len(dimensions) == 1:
         game["board"] = [0]
         game["visible"] = [False]
-        for _ in range(dimensions[0]-1):
+        for _ in range(dimensions[0] - 1):
             game["board"].append(0)
             game["visible"].append(False)
 
     else:
         game["board"] = [[]]
         game["visible"] = [[]]
-        for _ in range(dimensions[0]-1):
+        for _ in range(dimensions[0] - 1):
             game["board"].append([])
             game["visible"].append([])
 
@@ -246,18 +245,18 @@ def new_game_nd(dimensions, num_mice):
         # game["visible"] = [[]] * dimensions[0]
         one_less_dimension = new_game_nd(dimensions[1:], num_mice)
 
-
         def deep_copy(input):
             if isinstance(input, list):
                 return [deep_copy(x) for x in input]
-            else: return input
+            else:
+                return input
 
         for ind in range(dimensions[0]):
             # use a recursive copy so each top-level slice has independent inner lists
             game["board"][ind] = deep_copy(one_less_dimension["board"])
             game["visible"][ind] = deep_copy(one_less_dimension["visible"])
 
-    game["coord_to_val"]={}
+    game["coord_to_val"] = {}
     for coord in all_coords(game["dimensions"]):
         game["coord_to_val"][coord] = get_value_nd(game, coord, initial=True)
 
@@ -269,10 +268,12 @@ def new_game_nd(dimensions, num_mice):
 
     return game
 
-def set_value_nd(game, coord, value, type = "board"):
+
+def set_value_nd(game, coord, value, type="board"):
     """
     Mutates game board
     """
+
     def value_to_set(curr_list, coord, value):
         if len(coord) < 1:
             return value
@@ -285,15 +286,18 @@ def set_value_nd(game, coord, value, type = "board"):
 
     game[type][coord[0]] = value_to_set(game[type][coord[0]], coord[1:], value)
 
-    if type == "board": game["coord_to_val"][coord] = value
+    if type == "board":
+        game["coord_to_val"][coord] = value
 
     return None
 
-def get_value_nd(game, coord, initial = False):
+
+def get_value_nd(game, coord, initial=False):
     """
     return value of board at that coord
     """
     if initial:
+
         def get_val(curr_list, coord):
             if len(coord) <= 0:
                 return []
@@ -304,7 +308,8 @@ def get_value_nd(game, coord, initial = False):
 
         return get_val(game["board"][coord[0]], coord[1:])
 
-    else: return game["coord_to_val"][coord]
+    else:
+        return game["coord_to_val"][coord]
 
 
 def get_neighbors_nd(game, coord, iteration=0):
@@ -313,47 +318,50 @@ def get_neighbors_nd(game, coord, iteration=0):
     """
     if len(coord) == 1:
         val = coord[0]
-        if val == 0 and val == game["dimensions"][iteration]-1:
+        if val == 0 and val == game["dimensions"][iteration] - 1:
             return {(val,)}
         elif val == 0:
-            return {(coord[0]+1, ), (coord[0],)}
-        elif val == game["dimensions"][iteration]-1:
-            return {(coord[0],), (coord[0]-1,)}
-        else: return {(coord[0]+1, ), (coord[0],), (coord[0]-1,)}
+            return {(coord[0] + 1,), (coord[0],)}
+        elif val == game["dimensions"][iteration] - 1:
+            return {(coord[0],), (coord[0] - 1,)}
+        else:
+            return {(coord[0] + 1,), (coord[0],), (coord[0] - 1,)}
     else:
         neighbors = set()
         first = coord[0]
         rest = coord[1:]
-        rest_neighbors = get_neighbors_nd(game, rest, iteration+1)
+        rest_neighbors = get_neighbors_nd(game, rest, iteration + 1)
         for neighbor_coord in rest_neighbors:
-            if first == 0 and first == game["dimensions"][iteration]-1:
+            if first == 0 and first == game["dimensions"][iteration] - 1:
                 neighbors.add((first,) + neighbor_coord)
             elif first == 0:
                 neighbors.add((first,) + neighbor_coord)
-                neighbors.add((first+1,) + neighbor_coord)
-            elif first == game["dimensions"][iteration]-1:
+                neighbors.add((first + 1,) + neighbor_coord)
+            elif first == game["dimensions"][iteration] - 1:
                 neighbors.add((first,) + neighbor_coord)
-                neighbors.add((first-1,) + neighbor_coord)
+                neighbors.add((first - 1,) + neighbor_coord)
             else:
                 neighbors.add((first,) + neighbor_coord)
-                neighbors.add((first+1,) + neighbor_coord)
-                neighbors.add((first-1,) + neighbor_coord)
+                neighbors.add((first + 1,) + neighbor_coord)
+                neighbors.add((first - 1,) + neighbor_coord)
         return neighbors
+
 
 def all_coords(dimension):
     """
     Return a set of all the coordinates in an n-dimensional game board
     """
-    if len(dimension)==1:
+    if len(dimension) == 1:
         return set((x,) for x in range(dimension[0]))
     else:
         output = set()
         rest_coords = all_coords(dimension[1:])
         for first in range(dimension[0]):
             for coord in rest_coords:
-                output.add((first,)+coord)
+                output.add((first,) + coord)
         return output
-    
+
+
 def place_mice_nd(game, num_mice, disallowed):
     """
     Add mice to the given game, subject to limitations on where they may be
@@ -393,32 +401,33 @@ def place_mice_nd(game, num_mice, disallowed):
         [[False, False], [False, False]]
         [[False, False], [False, False]]
     """
-    #place the mice first
+    # place the mice first
     generator = random_coordinates(game["dimensions"])
-        #You must give generator a name, otherwise you call function anew each time
+    # You must give generator a name, otherwise you call function anew each time
     # for _ in range(3):
     #     print(next(generator))
     remaining_mice = num_mice
     mice_spots = set()
-    while remaining_mice>0:
+    while remaining_mice > 0:
         coord = next(generator)
         if coord not in disallowed:
-            set_value_nd(game, coord, 'm')
+            set_value_nd(game, coord, "m")
             mice_spots.add(coord)
             remaining_mice -= 1
             disallowed.add(coord)
 
-    #update neighbors
+    # update neighbors
     empty_spots = all_coords(game["dimensions"]) - mice_spots
     for spot in empty_spots:
         curr_mouse_count = 0
         neighbors = get_neighbors_nd(game, spot) - {spot}
         for neighbor in neighbors:
-            if get_value_nd(game, neighbor)=='m':
-                curr_mouse_count+=1
+            if get_value_nd(game, neighbor) == "m":
+                curr_mouse_count += 1
         set_value_nd(game, spot, curr_mouse_count)
 
     return None
+
 
 def game_won_nd(game):
     """
@@ -428,7 +437,7 @@ def game_won_nd(game):
         return False
     elif game["state"] == "won":
         return True
-    else: #still labelled ongoing
+    else:  # still labelled ongoing
         total_coords = 1
         for val in game["dimensions"]:
             total_coords *= val
@@ -497,45 +506,49 @@ def reveal_nd(game, coordinates):
         [[True, True], [False, False], [True, True], [True, True]]
         [[False, False], [False, False], [True, True], [True, True]]
     """
-    first_reveal = (len(game["revealed_coords"])==0)
-    #check incoming game state
-    #if not ongoing, return 0
+    first_reveal = len(game["revealed_coords"]) == 0
+    # check incoming game state
+    # if not ongoing, return 0
     if game["state"] != "ongoing":
         return 0
-    #if already revealed, return 0
+    # if already revealed, return 0
     if coordinates in game["revealed_coords"]:
         return 0
-    #else
+    # else
     if coordinates in game["bed_coords"]:
         return 0
-    #check if first reveal
-    #if first reveal, then 
+    # check if first reveal
+    # if first reveal, then
     if first_reveal:
         # first call place mice with disallowed coords being neighbors of coord plus coord itself
         disallowed = get_neighbors_nd(game, coordinates)
-        place_mice_nd(game, game["num_mice"] , disallowed)
-    #now do reveal
-    #add this coord to revealed
+        place_mice_nd(game, game["num_mice"], disallowed)
+    # now do reveal
+    # add this coord to revealed
     game["revealed_coords"].add(coordinates)
     num_revealed = 1
-    #var = value at this coord
+    # var = value at this coord
     val = get_value_nd(game, coordinates)
-    #reveal this coord in visible
+    # reveal this coord in visible
     set_value_nd(game, coordinates, True, type="visible")
-    #if mouse, we lost
-    if val == 'm':
+    # if mouse, we lost
+    if val == "m":
         game["state"] = "lost"
-    #if number, just reveal this square
-    #if 0, call reveal on all neighbors that are not revealed yet
+    # if number, just reveal this square
+    # if 0, call reveal on all neighbors that are not revealed yet
     elif val == 0:
-        neighbors = get_neighbors_nd(game, coordinates) - {coordinates} - game["revealed_coords"]
+        neighbors = (
+            get_neighbors_nd(game, coordinates)
+            - {coordinates}
+            - game["revealed_coords"]
+        )
         for neighbor in neighbors:
             num_revealed += reveal_nd(game, neighbor)
-    #check if won using helper function and update
+    # check if won using helper function and update
     if game["state"] != "lost":
         if game_won_nd(game):
             game["state"] = "won"
-    
+
     return num_revealed
 
 
@@ -566,30 +579,31 @@ def render_nd(game, all_visible=False):
     [[['m', '3'], ['m', '3'], ['1', '1'], [' ', ' ']],
      [['m', '3'], ['3', '3'], ['1', '1'], [' ', ' ']]]
     """
+
     def deep_copy(input):
-            if isinstance(input, list):
-                return [deep_copy(x) for x in input]
-            else: return input
+        if isinstance(input, list):
+            return [deep_copy(x) for x in input]
+        else:
+            return input
 
     show_board = deep_copy(game["board"])
-    
+
     for coord in all_coords(game["dimensions"]):
         val = get_value_nd(game, coord)
         if val == 0:
-            set_value_nd({"show_board": show_board}, coord, ' ', type = "show_board")
-        elif val != 'm':
-            set_value_nd({"show_board": show_board}, coord, str(val), type = "show_board")
-    
+            set_value_nd({"show_board": show_board}, coord, " ", type="show_board")
+        elif val != "m":
+            set_value_nd({"show_board": show_board}, coord, str(val), type="show_board")
+
     if all_visible:
         return show_board
-    else: #all_visible=False
+    else:  # all_visible=False
         for coord in all_coords(game["dimensions"]) - game["revealed_coords"]:
             if coord in game["bed_coords"]:
-                set_value_nd({"show_board": show_board}, coord, 'B', type = "show_board")
+                set_value_nd({"show_board": show_board}, coord, "B", type="show_board")
             else:
-                set_value_nd({"show_board": show_board}, coord, '_', type = "show_board")
+                set_value_nd({"show_board": show_board}, coord, "_", type="show_board")
         return show_board
-
 
 
 def random_coordinates(dimensions):
@@ -613,7 +627,9 @@ def random_coordinates(dimensions):
     while True:
         yield tuple(int(dim * val) for val, dim in zip(prng_gen, dimensions))
 
-#ADD FUNCTIONS FOR PLACING BEDS
+
+# ADD FUNCTIONS FOR PLACING BEDS
+
 
 def toggle_bed_2d(game, row, col):
     """
@@ -624,6 +640,7 @@ def toggle_bed_2d(game, row, col):
     """
     return toggle_bed_nd(game, (row, col))
 
+
 def toggle_bed_nd(game, coordinates):
     """
     Toggle a bed at the given coordinates in an n-dimensional game.
@@ -631,22 +648,23 @@ def toggle_bed_nd(game, coordinates):
     If there is no bed at the specified location, add one. If there is already
     a bed there, remove it.
     """
-    #confirm we have valid unrevealed coord as input + if game ongoing
-    #if not, return None
+    # confirm we have valid unrevealed coord as input + if game ongoing
+    # if not, return None
     if game["state"] != "ongoing":
         return None
     if coordinates in game["revealed_coords"]:
         return None
     if coordinates not in all_coords(game["dimensions"]):
         return None
-    #if no bed, add bed, return True
+    # if no bed, add bed, return True
     if coordinates not in game["bed_coords"]:
         game["bed_coords"].add(coordinates)
         return True
-    #if bed, remove bed, return False
+    # if bed, remove bed, return False
     else:
         game["bed_coords"].remove(coordinates)
         return False
+
 
 if __name__ == "__main__":
     # Test with doctests. Helpful to debug individual lab.py functions.
@@ -667,7 +685,7 @@ if __name__ == "__main__":
     #    verbose=False
     # )
 
-    # test for set_value_nd: 
+    # test for set_value_nd:
     # expected: {'board': [[[2, 2], ['m', 2]], [['m', 'm'], [2, 2]]]}
     # test_game = {"board": [ [[2, 2], [2, 2]], [['m', 'm'], [2, 2]] ]}
     # set_value_nd(test_game, (0, 1, 0), 'm')
@@ -683,7 +701,7 @@ if __name__ == "__main__":
     # set_value_nd(g, (0, 0, 0), 'm')
     # dump(g)
 
-    # test for get_value_nd: 
+    # test for get_value_nd:
     # expected: 1
     # test_game = {"board": [ [[2, 2], [1, 2]], [['m', 'm'], [2, 2]] ]}
     # print(get_value_nd(test_game, (0, 1, 0)))
@@ -694,16 +712,16 @@ if __name__ == "__main__":
     # print(len(get_neighbors_nd(test_game, (0, 1, 2))))
     # print(get_neighbors_nd(test_game, (0, 1, 2)))
 
-    #test for all_coords
+    # test for all_coords
     # expected:{(1, 0, 1), (0, 0, 0), (1, 0, 0), (0, 0, 2), (1, 0, 2), (0, 0, 1)}
     # print(all_coords((2,1,3)))
 
-    #test for place_mice
+    # test for place_mice
     # g = new_game_nd((2,2,2), 2)
     # place_mice_nd(g, 2, set())
     # dump(g)
 
-    #test for reveal_nd
+    # test for reveal_nd
     # g = new_game_nd((2, 4, 2), 3)
     # print(reveal_nd(g, (0, 3, 0)))
     # dump(g)
@@ -727,6 +745,3 @@ if __name__ == "__main__":
     # reveal_nd(g, (0, 3, 0))
     # print(render_nd(g, False))
     # print(render_nd(g, True))
-
-
-    

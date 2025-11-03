@@ -665,6 +665,40 @@ def toggle_bed_nd(game, coordinates):
         game["bed_coords"].remove(coordinates)
         return False
 
+def matches_2d(game, pattern_dims, pattern, row, col):
+    return matches_nd(game, pattern_dims, pattern, (row, col))
+
+def matches_nd(game, pattern_dims, pattern, coordinates):
+    for coord in all_coords(pattern_dims):
+        pattern_coord = coord
+        
+        board_coord = list(coord)
+        for index in range(len(coordinates)):
+            board_coord[index] += coordinates[index]
+        board_coord = tuple(board_coord)
+        
+        pattern_val = get_value_nd({"board": pattern}, pattern_coord, initial=True) 
+        board_val = get_value_nd(game, board_coord)
+        
+        if pattern_val == "#":
+            if not board_coord in game["revealed_coords"]:
+                print("# is hidden")
+                return False
+            elif board_val == 'm':
+                print("mouse was revealed")
+                return False
+        elif pattern_val == "_":
+            if board_coord in game["revealed_coords"]:
+                print("_ is non-hidden")
+                return False
+        else:
+            if not board_coord in game["revealed_coords"]:
+                print("# is hidden")
+                return False
+            elif str(board_val) != pattern_val:
+                return False
+    return True
+
 
 if __name__ == "__main__":
     # Test with doctests. Helpful to debug individual lab.py functions.
